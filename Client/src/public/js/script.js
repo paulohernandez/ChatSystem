@@ -1,12 +1,19 @@
 class Home {
     constructor(){
         this.socket = io.connect('/')
+        this.name;
         this.conversation();
     }
     
     async login(){
-        
-        window.location.href = '/group'
+        let name = $('#username').val()
+        window.location.href = `/login/${name}`
+    }
+    async mySession(){
+        await axiosRequest( 'GET' , '/mysession' , {} ).done(( response ) => {
+            let userName = response.data._name
+            this.socket.emit('name' , userName)
+        })
     }
 
     sendMessage(){
@@ -14,10 +21,10 @@ class Home {
         this.socket.emit('messege' ,{ messege:  messege})
         $('#input-messege').val('Sent!')
     }
-    conversation(){
+    async conversation(){
+        await this.mySession()
         this.socket.on('online', (data) => {
-            $('.member-online').text(data)
-            console.log(data)
+            $('.member-online').text(`${data} ONLINE`)
         })
         this.socket.on('chat' , (data) => {
         let details = `${data.userid}: ${data.messege}`
@@ -32,7 +39,6 @@ class Home {
 
 $(document).ready(function(){
     let home = new Home();
-
         $('.submit').on('click', function(){
             home.login();
         })
